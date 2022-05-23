@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { theme } from '../../theme';
 import { ArrowLeft } from 'phosphor-react-native';
+import { captureScreen } from 'react-native-view-shot';
 
 import { FeedbackType } from '../Widget';
 
@@ -18,15 +19,39 @@ import { Button } from '../Button';
 
 interface Props {
   feedbackType: FeedbackType
+  onCancelFeedback: () => void
+  onSendFeedback: () => void
 }
 
-export function Form({ feedbackType }: Props) {
+export function Form({ feedbackType, onCancelFeedback, onSendFeedback }: Props) {
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false)
+  const [screenshot, setScreenshot] = useState<string | null>(null)
   const feedbackTypeInfo = feedbackTypes[feedbackType]
+
+  function handleScreenshot() {
+    captureScreen({
+      format: 'jpg',
+      quality: 0.8
+    })
+      .then((uri) => setScreenshot(uri))
+      .catch((error) => console.log(error))
+  }
+
+  function handleScreenshotRemove() {
+    setScreenshot(null)
+  }
+
+  async function handleSendFeedback() {
+    if (isSendingFeedback) {
+      return
+    }
+    setIsSendingFeedback(true)
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onCancelFeedback}>
           <ArrowLeft
             size={24}
             weight='bold'
@@ -55,13 +80,14 @@ export function Form({ feedbackType }: Props) {
 
       <View style={styles.footer}>
         <ScreenshotButton
-          onTakeShot={() => {}}
-          onRemoveShot={() => {}}
-          screenshot='https://instagram.fpfb1-1.fna.fbcdn.net/v/t51.2885-15/160219587_207186411151857_4411364232692466218_n.jpg?stp=dst-jpg_e35&_nc_ht=instagram.fpfb1-1.fna.fbcdn.net&_nc_cat=109&_nc_ohc=5lmHEUCG8G4AX8iAM5B&edm=ALQROFkBAAAA&ccb=7-5&ig_cache_key=MjUyODc3MDcxNTc2NDUyNjQzMg%3D%3D.2-ccb7-5&oh=00_AT90xaxcs_SwLKC0_PdTz79et-F7hGYJp67NbXDbnzXB1Q&oe=628F63DA&_nc_sid=30a2ef'
+          onTakeShot={handleScreenshot}
+          onRemoveShot={handleScreenshotRemove}
+          screenshot={screenshot}
         />
         
         <Button
-          isLoading={false}
+          isLoading={isSendingFeedback}
+          onPress={handleSendFeedback}
         />
       </View>
 

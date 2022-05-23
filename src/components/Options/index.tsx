@@ -7,8 +7,13 @@ import { Option } from '../Option';
 import { feedbackTypes } from '../../utils/feedbackTypes'
 
 import { styles } from './styles';
+import { FeedbackType } from '../Widget';
 
-export function Options() {
+interface Props {
+  onFeedbackTypeChange: (feecbacktype: FeedbackType) => void
+}
+
+export function Options({ onFeedbackTypeChange }: Props) {
   return (
     <View style={styles.container}>
 
@@ -17,7 +22,14 @@ export function Options() {
       </Text>
 
       <View style={styles.options}>
-        {Object.entries(feedbackTypes).map(([key, value]) => <Option key={key} title={value.title} image={value.image} />)}
+        {Object.entries(feedbackTypes).map(([key, value]) =>
+          <Option
+            key={key}
+            title={value.title}
+            image={value.image}
+            onPress={() => onFeedbackTypeChange(key as FeedbackType)}
+          />
+        )}
       </View>
 
       <Copyright />
