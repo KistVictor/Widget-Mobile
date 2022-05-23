@@ -9,6 +9,7 @@ import {
 import { theme } from '../../theme';
 import { ArrowLeft } from 'phosphor-react-native';
 import { captureScreen } from 'react-native-view-shot';
+import * as FileSystem from 'expo-file-system'
 
 import { FeedbackType } from '../Widget';
 
@@ -16,6 +17,7 @@ import { styles } from './styles';
 import { feedbackTypes } from '../../utils/feedbackTypes';
 import { ScreenshotButton } from '../ScreenshotButton';
 import { Button } from '../Button';
+import { api } from '../../lib/api';
 
 interface Props {
   feedbackType: FeedbackType
@@ -26,6 +28,8 @@ interface Props {
 export function Form({ feedbackType, onCancelFeedback, onSendFeedback }: Props) {
   const [isSendingFeedback, setIsSendingFeedback] = useState(false)
   const [screenshot, setScreenshot] = useState<string | null>(null)
+  const [comment, setComment] = useState('')
+
   const feedbackTypeInfo = feedbackTypes[feedbackType]
 
   function handleScreenshot() {
@@ -46,6 +50,18 @@ export function Form({ feedbackType, onCancelFeedback, onSendFeedback }: Props) 
       return
     }
     setIsSendingFeedback(true)
+
+    const screenshotBase64 = screenshot && await FileSystem.readAsStringAsync(screenshot, { encoding: 'base64' })
+
+    await api.post('/feedbacks', {
+      type: feedbackType,
+      screenshot: `data:image/png;base64, ${screenshotBase64}`,
+      comment
+    }).then(() => onSendFeedback())
+      .catch((err) => {
+        console.log(err)
+        setIsSendingFeedback(false)
+      })
   }
 
   return (
@@ -76,6 +92,8 @@ export function Form({ feedbackType, onCancelFeedback, onSendFeedback }: Props) 
         style={styles.input}
         placeholder='Algo não está funcionando bem? Queremos corrigir. Conte com detalhes o que está acontecendo...'
         placeholderTextColor={theme.colors.text_secondary}
+        autoCorrect={false}
+        onChangeText={setComment}
       />
 
       <View style={styles.footer}>
